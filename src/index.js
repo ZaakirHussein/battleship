@@ -1,3 +1,3 @@
-import homeDisplay from "/src/dom/home.js";
+import { homeDisplay } from "./dom/dom";
 
 homeDisplay();

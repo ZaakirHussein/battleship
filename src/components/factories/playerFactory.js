@@ -32,24 +32,8 @@ function PlayerFactory(name, checkTurn) {
     return output;
   };
 
-  const computerPlay = (humanPlayer, computer) => {
-    const humanBoardObj = humanPlayer.board;
-    const humanBoardAccess = humanBoardObj.getBoardPieces();
-
-    const eligibleBoard = humanBoardAccess.filter(
-      (boardPiece) => boardPiece.status === null
-    );
-
-    const computerAttack = (coordinates) => {
-      humanBoardObj.receiveAttack(coordinates, computer);
-    };
-
-    const generateRandomCoord = (() => {
-      const randomBoardPiece =
-        eligibleBoard[Math.floor(Math.random() * eligibleBoard.length)];
-      const randomBoardPiecesCoord = randomBoardPiece.ID;
-      computerAttack(randomBoardPiecesCoord);
-    })();
+  const getMoves = () => {
+    return moves;
   };
 
   const randomShipPlacement = (player) => {
@@ -77,7 +61,7 @@ function PlayerFactory(name, checkTurn) {
     getTurnStatus,
     getPlayerBoard,
     getAttackCoord,
-    computerPlay,
+    getMoves,
     randomShipPlacement,
   };
 }

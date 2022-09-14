@@ -26,7 +26,9 @@ test("isSunk() will return true if health is 0", () => {
   destroyer.hit("A3");
   destroyer.hit("A4");
   let mock = destroyer.isSunk();
+  let mock2 = destroyer.getSunkStatus();
   expect(mock).toBe(true);
+  expect(mock2).toBe(true);
 });
 
 test("isSunk() will return false if health is above 0", () => {

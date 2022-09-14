@@ -1,7 +1,8 @@
 import PlayerFactory from "./factories/playerFactory";
 import { nameStorage } from "./helpers/retrievePlayerName";
 import positionShips from "./positionShips";
-import placeShipDisplay from "/src/dom/place-ships-display/placeShipDisplay.js";
+import { startGameListener } from "../dom/domHelpers";
+import { positionShipDisplay } from "/src/dom/dom.js";
 
 const initializeGame = () => {
   const player = new PlayerFactory(nameStorage, true);
@@ -14,8 +15,9 @@ const initializeGame = () => {
   computerBoard.setShipCoordinates("Submarine", ["B7", "C7", "D7"]);
   computerBoard.setShipCoordinates("Destroyer", ["C10", "D10"]);
 
-  placeShipDisplay(nameStorage);
+  positionShipDisplay(nameStorage);
   positionShips(player, computer);
+  startGameListener(player, computer);
 };
 
 export default initializeGame;

@@ -156,7 +156,6 @@ input:focus::-webkit-input-placeholder {
   display: grid;
   width: 45rem;
   height: 45rem;
-  display: grid;
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(10, 1fr);
   gap: 1px;
@@ -177,6 +176,10 @@ input:focus::-webkit-input-placeholder {
   width: 100%;
   font-size: 2.5rem;
   text-decoration: underline;
+}
+
+.sunk-ship-list {
+  color: yellow;
 }
 
 .ships-list {
@@ -232,6 +235,41 @@ input:focus::-webkit-input-placeholder {
 
 .ready-btn:focus {
   box-shadow: rgba(0, 0, 0, 0.3) 2px 8px 4px -6px;
+}
+
+.carrier {
+  display: grid;
+  width: 45rem;
+  height: 45rem;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.battleship {
+  display: grid;
+  width: 45rem;
+  height: 45rem;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.cruiser {
+  display: grid;
+  width: 45rem;
+  height: 45rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.submarine {
+  display: grid;
+  width: 45rem;
+  height: 45rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.destroyer {
+  display: grid;
+  width: 45rem;
+  height: 45rem;
+  grid-template-columns: repeat(2, 1fr);
 }
 /* Game Display */
 
@@ -291,4 +329,34 @@ input:focus::-webkit-input-placeholder {
 .grid-box,
 .grid-box-computer {
   border: 1px solid #24c715;
+}
+
+.box-ship-placed {
+  background-color: #187306;
+}
+
+.box-hit {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: red;
+  color: beige;
+  font-size: 2rem;
+}
+
+.box-missed {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: blue;
+  color: beige;
+  font-size: 2rem;
+}
+
+.box-sunk {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: yellow;
+  color: black;
 }

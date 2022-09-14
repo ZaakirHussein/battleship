@@ -1,4 +1,4 @@
-import updateGameDisplay from "../dom/game-display/updateGameDisplay";
+import { updateGameDisplay } from "../dom/domHelpers";
 
 const playRound = (player, computer) => {
   const playerBoard = player.getPlayerBoard();

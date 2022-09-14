@@ -1,7 +1,6 @@
-import startGame from "./startGame";
-import createListOfShips from "/src/dom/helpers/createListOfShips.js";
+import { createListOfShips } from "../dom/domHelpers";
 
-const positionShips = (player, computer) => {
+const positionShips = (player) => {
   const playerBoard = player.getPlayerBoard();
 
   // function that allows user to place ships with drag and drop
@@ -11,13 +10,14 @@ const positionShips = (player, computer) => {
   playerBoard.setShipCoordinates("Submarine", ["F1", "F2", "F3"]);
   playerBoard.setShipCoordinates("Destroyer", ["J4", "J5"]);
 
+  playerBoard.positionUserShips();
+
   const positionShipContainer = document.querySelector(".grid-container");
   playerBoard.renderBoard(positionShipContainer, true, "position");
 
   const placeShipContent = document.querySelector(".place-ship");
 
   createListOfShips(placeShipContent, player);
-  startGame(player, computer);
 };
 
 export default positionShips;

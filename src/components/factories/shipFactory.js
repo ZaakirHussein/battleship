@@ -1,7 +1,8 @@
-function Ship(name, length, coordinates = [], sunk = false) {
+function Ship(name, length, coordinates = []) {
   const shipType = name;
   let health = length;
   const hitMarkers = [];
+  let sunk = false;
 
   //setCoordinates
   const shipCoordinates = coordinates;
@@ -14,12 +15,14 @@ function Ship(name, length, coordinates = [], sunk = false) {
   };
 
   const isSunk = () => {
-    if (health === 0) return true;
-    else return false;
+    if (health === 0) {
+      sunk = true;
+      return true;
+    } else return false;
   };
 
   const getShipCoordinates = () => {
-    return shipCoordinates;
+    return coordinates;
   };
 
   const getHealth = () => {
@@ -27,6 +30,10 @@ function Ship(name, length, coordinates = [], sunk = false) {
   };
   const getHitmarkers = () => {
     return hitMarkers;
+  };
+
+  const getSunkStatus = () => {
+    return sunk;
   };
 
   return {
@@ -40,6 +47,7 @@ function Ship(name, length, coordinates = [], sunk = false) {
     getShipCoordinates,
     getHealth,
     getHitmarkers,
+    getSunkStatus,
   };
 }
 

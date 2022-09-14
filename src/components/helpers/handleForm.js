@@ -1,5 +1,5 @@
-import { removeContent } from "../../dom/helpers/pageTransition";
-import { retrievePlayerName, nameStorage } from "./retrievePlayerName";
+import { removeContent } from "/src/dom/domHelpers.js";
+import { retrievePlayerName } from "./retrievePlayerName";
 import initializeGame from "../initializeGame";
 
 const handleForm = (e) => {

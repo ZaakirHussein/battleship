@@ -13,6 +13,7 @@ function Gameboard() {
           ship: null,
           status: null,
           attackedBy: null,
+          sunk: false,
         });
       }
     }
@@ -29,6 +30,27 @@ function Gameboard() {
     new Ship("Submarine", 3),
     new Ship("Destroyer", 2),
   ];
+
+  const positionUserShips = () => {
+    const listOfShips = getShipStorage();
+    const cssShips = [
+      "carrier",
+      "battleship",
+      "cruiser",
+      "submarine",
+      "destroyer",
+    ];
+    const positionShipContainer = document.querySelector(".grid-container");
+
+    listOfShips.map((ship) => {
+      cssShips.map((cssShip) => {
+        positionShipContainer.addEventListener("mouseover", function (e) {
+          document.createElement("div").classList.add(cssShip);
+          console.log(e.target.dataset.info);
+        });
+      });
+    });
+  };
 
   const setShipCoordinates = (name, inputCoordinates) => {
     for (const ship of shipStorage) {
@@ -98,6 +120,33 @@ function Gameboard() {
     }
   };
 
+  const setShipSunkBoardProp = () => {
+    const sunkShips = [];
+
+    for (const ship of shipStorage) {
+      if (ship.getSunkStatus() == true) {
+        sunkShips.push(ship);
+
+        // Here find the sunk ship's coordinates and update the board pieces that contain the sunk ship
+        sunkShips.forEach((sunkShip) => {
+          const approvedBoardPieces = sunkShip.coordinates.map(
+            (indivdiualCoordinate) => {
+              const matchingBoardPieces = boardPieces.find((boardPiece) => {
+                return boardPiece.ID === indivdiualCoordinate;
+              });
+
+              return matchingBoardPieces;
+            }
+          );
+
+          for (const boardPiece of approvedBoardPieces) {
+            boardPiece.sunk = sunkShip.getSunkStatus();
+          }
+        });
+      }
+    }
+  };
+
   const renderBoard = (container, user, mode) => {
     if (user === true) {
       const grid = container.appendChild(document.createElement("div"));
@@ -114,19 +163,26 @@ function Gameboard() {
         let cellData = boardPieces[i];
         let cellShipData = cellData.ship;
         let cellHitData = cellData.status;
+        let cellSunkStatus = cellData.sunk;
 
         if (cellShipData !== null) {
-          cell.style.backgroundColor = "#187306";
+          cell.classList.toggle("box-ship-placed");
+        }
+
+        if (cellSunkStatus === true) {
+          cell.classList.toggle("box-sunk");
         }
 
         switch (cellHitData) {
           case "hit":
-            compCell.style.backgroundColor = "red";
-            compCell.textContent = "X";
+            // toggle a class
+            cell.classList.toggle("box-hit");
+            cell.textContent = "X";
             break;
           case "missed":
-            compCell.style.backgroundColor = "blue";
-            compCell.textContent = "O";
+            // toggle a class
+            cell.classList.toggle("box-missed");
+            cell.textContent = "O";
             break;
         }
       }
@@ -140,30 +196,26 @@ function Gameboard() {
         compCell.dataset.info = boardPieces[i].ID;
         const compCellData = boardPieces[i];
         const cellStatus = compCellData.status;
+        let cellSunkStatus = compCellData.sunk;
+
+        console.log(cellSunkStatus);
+
+        if (cellSunkStatus == true) {
+          compCell.classList.toggle("box-sunk");
+        }
 
         switch (cellStatus) {
           case "hit":
-            compCell.style.backgroundColor = "red";
+            // toggle a class/add class
+            compCell.classList.toggle("box-hit");
             compCell.textContent = "X";
             break;
           case "missed":
-            compCell.style.backgroundColor = "blue";
+            compCell.classList.toggle("box-missed");
             compCell.textContent = "O";
             break;
         }
       }
-    }
-  };
-
-  const attackComputer = (player, computerPlayer, gridCells) => {
-    const compBoard = computerPlayer.getPlayerBoard();
-    for (const cell of gridCells) {
-      cell.addEventListener("click", function () {
-        let coordinates = cell.dataset.info;
-        compBoard.receiveAttack(coordinates, player);
-        player.changeTurn();
-        computerPlayer.changeTurn();
-      });
     }
   };
 
@@ -203,13 +255,14 @@ function Gameboard() {
 
   return {
     setShipCoordinates,
+    setShipSunkBoardProp,
     getCompCells,
     getBoardPieces,
     getShipStorage,
     getFleetHealth,
     areAllShipsSunk,
+    positionUserShips,
     receiveAttack,
-    attackComputer,
     renderBoard,
   };
 }

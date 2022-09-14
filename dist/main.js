@@ -28,6 +28,7 @@ function Gameboard() {
           ship: null,
           status: null,
           attackedBy: null,
+          sunk: false,
         });
       }
     }
@@ -44,6 +45,27 @@ function Gameboard() {
     new _shipFactory__WEBPACK_IMPORTED_MODULE_0__["default"]("Submarine", 3),
     new _shipFactory__WEBPACK_IMPORTED_MODULE_0__["default"]("Destroyer", 2),
   ];
+
+  const positionUserShips = () => {
+    const listOfShips = getShipStorage();
+    const cssShips = [
+      "carrier",
+      "battleship",
+      "cruiser",
+      "submarine",
+      "destroyer",
+    ];
+    const positionShipContainer = document.querySelector(".grid-container");
+
+    listOfShips.map((ship) => {
+      cssShips.map((cssShip) => {
+        positionShipContainer.addEventListener("mouseover", function (e) {
+          document.createElement("div").classList.add(cssShip);
+          console.log(e.target.dataset.info);
+        });
+      });
+    });
+  };
 
   const setShipCoordinates = (name, inputCoordinates) => {
     for (const ship of shipStorage) {
@@ -113,6 +135,33 @@ function Gameboard() {
     }
   };
 
+  const setShipSunkBoardProp = () => {
+    const sunkShips = [];
+
+    for (const ship of shipStorage) {
+      if (ship.getSunkStatus() == true) {
+        sunkShips.push(ship);
+
+        // Here find the sunk ship's coordinates and update the board pieces that contain the sunk ship
+        sunkShips.forEach((sunkShip) => {
+          const approvedBoardPieces = sunkShip.coordinates.map(
+            (indivdiualCoordinate) => {
+              const matchingBoardPieces = boardPieces.find((boardPiece) => {
+                return boardPiece.ID === indivdiualCoordinate;
+              });
+
+              return matchingBoardPieces;
+            }
+          );
+
+          for (const boardPiece of approvedBoardPieces) {
+            boardPiece.sunk = sunkShip.getSunkStatus();
+          }
+        });
+      }
+    }
+  };
+
   const renderBoard = (container, user, mode) => {
     if (user === true) {
       const grid = container.appendChild(document.createElement("div"));
@@ -129,19 +178,26 @@ function Gameboard() {
         let cellData = boardPieces[i];
         let cellShipData = cellData.ship;
         let cellHitData = cellData.status;
+        let cellSunkStatus = cellData.sunk;
 
         if (cellShipData !== null) {
-          cell.style.backgroundColor = "#187306";
+          cell.classList.toggle("box-ship-placed");
+        }
+
+        if (cellSunkStatus === true) {
+          cell.classList.toggle("box-sunk");
         }
 
         switch (cellHitData) {
           case "hit":
-            compCell.style.backgroundColor = "red";
-            compCell.textContent = "X";
+            // toggle a class
+            cell.classList.toggle("box-hit");
+            cell.textContent = "X";
             break;
           case "missed":
-            compCell.style.backgroundColor = "blue";
-            compCell.textContent = "O";
+            // toggle a class
+            cell.classList.toggle("box-missed");
+            cell.textContent = "O";
             break;
         }
       }
@@ -155,30 +211,26 @@ function Gameboard() {
         compCell.dataset.info = boardPieces[i].ID;
         const compCellData = boardPieces[i];
         const cellStatus = compCellData.status;
+        let cellSunkStatus = compCellData.sunk;
+
+        console.log(cellSunkStatus);
+
+        if (cellSunkStatus == true) {
+          compCell.classList.toggle("box-sunk");
+        }
 
         switch (cellStatus) {
           case "hit":
-            compCell.style.backgroundColor = "red";
+            // toggle a class/add class
+            compCell.classList.toggle("box-hit");
             compCell.textContent = "X";
             break;
           case "missed":
-            compCell.style.backgroundColor = "blue";
+            compCell.classList.toggle("box-missed");
             compCell.textContent = "O";
             break;
         }
       }
-    }
-  };
-
-  const attackComputer = (player, computerPlayer, gridCells) => {
-    const compBoard = computerPlayer.getPlayerBoard();
-    for (const cell of gridCells) {
-      cell.addEventListener("click", function () {
-        let coordinates = cell.dataset.info;
-        compBoard.receiveAttack(coordinates, player);
-        player.changeTurn();
-        computerPlayer.changeTurn();
-      });
     }
   };
 
@@ -218,13 +270,14 @@ function Gameboard() {
 
   return {
     setShipCoordinates,
+    setShipSunkBoardProp,
     getCompCells,
     getBoardPieces,
     getShipStorage,
     getFleetHealth,
     areAllShipsSunk,
+    positionUserShips,
     receiveAttack,
-    attackComputer,
     renderBoard,
   };
 }
@@ -279,24 +332,8 @@ function PlayerFactory(name, checkTurn) {
     return output;
   };
 
-  const computerPlay = (humanPlayer, computer) => {
-    const humanBoardObj = humanPlayer.board;
-    const humanBoardAccess = humanBoardObj.getBoardPieces();
-
-    const eligibleBoard = humanBoardAccess.filter(
-      (boardPiece) => boardPiece.status === null
-    );
-
-    const computerAttack = (coordinates) => {
-      humanBoardObj.receiveAttack(coordinates, computer);
-    };
-
-    const generateRandomCoord = (() => {
-      const randomBoardPiece =
-        eligibleBoard[Math.floor(Math.random() * eligibleBoard.length)];
-      const randomBoardPiecesCoord = randomBoardPiece.ID;
-      computerAttack(randomBoardPiecesCoord);
-    })();
+  const getMoves = () => {
+    return moves;
   };
 
   const randomShipPlacement = (player) => {
@@ -324,7 +361,7 @@ function PlayerFactory(name, checkTurn) {
     getTurnStatus,
     getPlayerBoard,
     getAttackCoord,
-    computerPlay,
+    getMoves,
     randomShipPlacement,
   };
 }
@@ -344,10 +381,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-function Ship(name, length, coordinates = [], sunk = false) {
+function Ship(name, length, coordinates = []) {
   const shipType = name;
   let health = length;
   const hitMarkers = [];
+  let sunk = false;
 
   //setCoordinates
   const shipCoordinates = coordinates;
@@ -360,12 +398,14 @@ function Ship(name, length, coordinates = [], sunk = false) {
   };
 
   const isSunk = () => {
-    if (health === 0) return true;
-    else return false;
+    if (health === 0) {
+      sunk = true;
+      return true;
+    } else return false;
   };
 
   const getShipCoordinates = () => {
-    return shipCoordinates;
+    return coordinates;
   };
 
   const getHealth = () => {
@@ -373,6 +413,10 @@ function Ship(name, length, coordinates = [], sunk = false) {
   };
   const getHitmarkers = () => {
     return hitMarkers;
+  };
+
+  const getSunkStatus = () => {
+    return sunk;
   };
 
   return {
@@ -386,10 +430,89 @@ function Ship(name, length, coordinates = [], sunk = false) {
     getShipCoordinates,
     getHealth,
     getHitmarkers,
+    getSunkStatus,
   };
 }
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Ship);
+
+
+/***/ }),
+
+/***/ "./src/components/gameFlow.js":
+/*!************************************!*\
+  !*** ./src/components/gameFlow.js ***!
+  \************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _src_dom_domHelpers_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dom/domHelpers */ "./src/dom/domHelpers.js");
+
+
+
+const gameFlow = async (player, computer) => {
+  const playerBoard = player.getPlayerBoard();
+  const computerBoard = computer.getPlayerBoard();
+
+  while (
+    playerBoard.areAllShipsSunk() == false &&
+    computerBoard.areAllShipsSunk() == false
+  ) {
+    const coordinates = await (0,_src_dom_domHelpers_js__WEBPACK_IMPORTED_MODULE_0__.retrieveClicked)();
+    computerBoard.receiveAttack(coordinates, player);
+    player.changeTurn();
+    computer.changeTurn();
+    playerBoard.setShipSunkBoardProp();
+    computerBoard.setShipSunkBoardProp();
+    (0,_src_dom_domHelpers_js__WEBPACK_IMPORTED_MODULE_0__.updateGameDisplay)(player, computer);
+    computerPlay(player, computer);
+    computer.changeTurn();
+    player.changeTurn();
+    computerBoard.setShipSunkBoardProp();
+    playerBoard.setShipSunkBoardProp();
+    (0,_src_dom_domHelpers_js__WEBPACK_IMPORTED_MODULE_0__.updateGameDisplay)(player, computer);
+
+    continue;
+  }
+  endGame(playerBoard, computerBoard);
+};
+
+const computerPlay = (humanPlayer, computer) => {
+  const humanBoardObj = humanPlayer.board;
+  const humanBoardAccess = humanBoardObj.getBoardPieces();
+
+  const eligibleBoard = humanBoardAccess.filter(
+    (boardPiece) => boardPiece.status === null
+  );
+
+  const computerAttack = (coordinates) => {
+    humanBoardObj.receiveAttack(coordinates, computer);
+  };
+
+  const generateRandomCoord = (() => {
+    const randomBoardPiece =
+      eligibleBoard[Math.floor(Math.random() * eligibleBoard.length)];
+    const randomBoardPiecesCoord = randomBoardPiece.ID;
+    computerAttack(randomBoardPiecesCoord);
+  })();
+};
+
+const endGame = (playerBoard, computerBoard) => {
+  if (computerBoard.areAllShipsSunk() === true) {
+    (0,_src_dom_domHelpers_js__WEBPACK_IMPORTED_MODULE_0__.turnMsg)("Congrats, you beat the computer!");
+    return true;
+  }
+  if (playerBoard.areAllShipsSunk() === true) {
+    (0,_src_dom_domHelpers_js__WEBPACK_IMPORTED_MODULE_0__.turnMsg)("Unfortunately you have lost to the computer!");
+    return true;
+  }
+  return false;
+};
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (gameFlow);
 
 
 /***/ }),
@@ -404,7 +527,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _dom_helpers_pageTransition__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../dom/helpers/pageTransition */ "./src/dom/helpers/pageTransition.js");
+/* harmony import */ var _src_dom_domHelpers_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../src/dom/domHelpers.js */ "./src/dom/domHelpers.js");
 /* harmony import */ var _retrievePlayerName__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./retrievePlayerName */ "./src/components/helpers/retrievePlayerName.js");
 /* harmony import */ var _initializeGame__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../initializeGame */ "./src/components/initializeGame.js");
 
@@ -415,7 +538,7 @@ const handleForm = (e) => {
   e.preventDefault();
   (0,_retrievePlayerName__WEBPACK_IMPORTED_MODULE_1__.retrievePlayerName)();
   const homeDisplayContainer = document.querySelector(".home-display");
-  (0,_dom_helpers_pageTransition__WEBPACK_IMPORTED_MODULE_0__.removeContent)(homeDisplayContainer);
+  (0,_src_dom_domHelpers_js__WEBPACK_IMPORTED_MODULE_0__.removeContent)(homeDisplayContainer);
   (0,_initializeGame__WEBPACK_IMPORTED_MODULE_2__["default"])();
 };
 
@@ -466,7 +589,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _factories_playerFactory__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./factories/playerFactory */ "./src/components/factories/playerFactory.js");
 /* harmony import */ var _helpers_retrievePlayerName__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./helpers/retrievePlayerName */ "./src/components/helpers/retrievePlayerName.js");
 /* harmony import */ var _positionShips__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./positionShips */ "./src/components/positionShips.js");
-/* harmony import */ var _src_dom_place_ships_display_placeShipDisplay_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../../src/dom/place-ships-display/placeShipDisplay.js */ "./src/dom/place-ships-display/placeShipDisplay.js");
+/* harmony import */ var _dom_domHelpers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../dom/domHelpers */ "./src/dom/domHelpers.js");
+/* harmony import */ var _src_dom_dom_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../../src/dom/dom.js */ "./src/dom/dom.js");
+
 
 
 
@@ -483,58 +608,12 @@ const initializeGame = () => {
   computerBoard.setShipCoordinates("Submarine", ["B7", "C7", "D7"]);
   computerBoard.setShipCoordinates("Destroyer", ["C10", "D10"]);
 
-  (0,_src_dom_place_ships_display_placeShipDisplay_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_helpers_retrievePlayerName__WEBPACK_IMPORTED_MODULE_1__.nameStorage);
+  (0,_src_dom_dom_js__WEBPACK_IMPORTED_MODULE_4__.positionShipDisplay)(_helpers_retrievePlayerName__WEBPACK_IMPORTED_MODULE_1__.nameStorage);
   (0,_positionShips__WEBPACK_IMPORTED_MODULE_2__["default"])(player, computer);
+  (0,_dom_domHelpers__WEBPACK_IMPORTED_MODULE_3__.startGameListener)(player, computer);
 };
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (initializeGame);
-
-
-/***/ }),
-
-/***/ "./src/components/playRound.js":
-/*!*************************************!*\
-  !*** ./src/components/playRound.js ***!
-  \*************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _dom_game_display_updateGameDisplay__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dom/game-display/updateGameDisplay */ "./src/dom/game-display/updateGameDisplay.js");
-
-
-const playRound = (player, computer) => {
-  const playerBoard = player.getPlayerBoard();
-  const computerBoard = computer.getPlayerBoard();
-  const computerBoardDom = computerBoard.getCompCells();
-
-  if (player.getTurnStatus()) {
-    for (const cell of computerBoardDom) {
-      cell.addEventListener("click", function () {
-        let coordinates = cell.dataset.info;
-        computerBoard.receiveAttack(coordinates, player);
-        player.changeTurn();
-        computer.changeTurn();
-        (0,_dom_game_display_updateGameDisplay__WEBPACK_IMPORTED_MODULE_0__["default"])(player, computer);
-        computerBoard.areAllShipsSunk();
-        playerBoard.areAllShipsSunk();
-      });
-    }
-  }
-
-  if (computer.getTurnStatus()) {
-    computer.computerPlay(player, computer);
-    computer.changeTurn();
-    player.changeTurn();
-    (0,_dom_game_display_updateGameDisplay__WEBPACK_IMPORTED_MODULE_0__["default"])(player, computer);
-    computerBoard.areAllShipsSunk();
-    playerBoard.areAllShipsSunk();
-  }
-};
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (playRound);
 
 
 /***/ }),
@@ -549,12 +628,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _startGame__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./startGame */ "./src/components/startGame.js");
-/* harmony import */ var _src_dom_helpers_createListOfShips_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../src/dom/helpers/createListOfShips.js */ "./src/dom/helpers/createListOfShips.js");
+/* harmony import */ var _dom_domHelpers__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dom/domHelpers */ "./src/dom/domHelpers.js");
 
 
-
-const positionShips = (player, computer) => {
+const positionShips = (player) => {
   const playerBoard = player.getPlayerBoard();
 
   // function that allows user to place ships with drag and drop
@@ -564,13 +641,14 @@ const positionShips = (player, computer) => {
   playerBoard.setShipCoordinates("Submarine", ["F1", "F2", "F3"]);
   playerBoard.setShipCoordinates("Destroyer", ["J4", "J5"]);
 
+  playerBoard.positionUserShips();
+
   const positionShipContainer = document.querySelector(".grid-container");
   playerBoard.renderBoard(positionShipContainer, true, "position");
 
   const placeShipContent = document.querySelector(".place-ship");
 
-  (0,_src_dom_helpers_createListOfShips_js__WEBPACK_IMPORTED_MODULE_1__["default"])(placeShipContent, player);
-  (0,_startGame__WEBPACK_IMPORTED_MODULE_0__["default"])(player, computer);
+  (0,_dom_domHelpers__WEBPACK_IMPORTED_MODULE_0__.createListOfShips)(placeShipContent, player);
 };
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (positionShips);
@@ -578,152 +656,27 @@ const positionShips = (player, computer) => {
 
 /***/ }),
 
-/***/ "./src/components/startGame.js":
-/*!*************************************!*\
-  !*** ./src/components/startGame.js ***!
-  \*************************************/
+/***/ "./src/dom/dom.js":
+/*!************************!*\
+  !*** ./src/dom/dom.js ***!
+  \************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */   "createHeader": () => (/* binding */ createHeader),
+/* harmony export */   "gameDisplay": () => (/* binding */ gameDisplay),
+/* harmony export */   "homeDisplay": () => (/* binding */ homeDisplay),
+/* harmony export */   "positionShipDisplay": () => (/* binding */ positionShipDisplay)
 /* harmony export */ });
-/* harmony import */ var _gameFlow__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../gameFlow */ "./src/gameFlow.js");
-/* harmony import */ var _src_dom_game_display_gameDisplay_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../src/dom/game-display/gameDisplay.js */ "./src/dom/game-display/gameDisplay.js");
-/* harmony import */ var _dom_helpers_pageTransition__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../dom/helpers/pageTransition */ "./src/dom/helpers/pageTransition.js");
+/* harmony import */ var _src_components_helpers_handleForm_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../src/components/helpers/handleForm.js */ "./src/components/helpers/handleForm.js");
+/* harmony import */ var _src_dom_domHelpers_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../src/dom/domHelpers.js */ "./src/dom/domHelpers.js");
+/* harmony import */ var _src_components_helpers_retrievePlayerName_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/helpers/retrievePlayerName */ "./src/components/helpers/retrievePlayerName.js");
 
 
 
 
-const startGame = (player, computer) => {
-  // assigning event listener to start game
-  const startGameBtn = document.querySelector(".ready-btn");
-  const placeShipDisplay = document.querySelector(".place-ship-container");
 
-  startGameBtn.addEventListener("click", function () {
-    // removes position display and repopulates with game display
-    (0,_dom_helpers_pageTransition__WEBPACK_IMPORTED_MODULE_2__.removeContent)(placeShipDisplay);
-    (0,_src_dom_game_display_gameDisplay_js__WEBPACK_IMPORTED_MODULE_1__["default"])(player, computer);
-
-    // starts game flow
-    (0,_gameFlow__WEBPACK_IMPORTED_MODULE_0__["default"])(player, computer);
-  });
-};
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (startGame);
-
-
-/***/ }),
-
-/***/ "./src/dom/game-display/gameDisplay.js":
-/*!*********************************************!*\
-  !*** ./src/dom/game-display/gameDisplay.js ***!
-  \*********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _src_dom_header_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../src/dom/header.js */ "./src/dom/header.js");
-/* harmony import */ var _src_dom_helpers_displayFleetsAndShips_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../src/dom/helpers/displayFleetsAndShips.js */ "./src/dom/helpers/displayFleetsAndShips.js");
-/* harmony import */ var _turnDisplay__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./turnDisplay */ "./src/dom/game-display/turnDisplay.js");
-
-
-
-
-const gameDisplay = (player, computer) => {
-  const turnContainer = document.body.appendChild(
-    document.createElement("div")
-  );
-  turnContainer.classList.add("turn-container");
-  const gameContainer = document.body.appendChild(
-    document.createElement("div")
-  );
-  gameContainer.classList.add("game-container");
-
-  // Display who's turn it is
-  (0,_turnDisplay__WEBPACK_IMPORTED_MODULE_2__["default"])(player, computer);
-
-  // Renders Player and Computer's gameboard and fleet
-  (0,_src_dom_helpers_displayFleetsAndShips_js__WEBPACK_IMPORTED_MODULE_1__["default"])(player, computer);
-};
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (gameDisplay);
-
-
-/***/ }),
-
-/***/ "./src/dom/game-display/turnDisplay.js":
-/*!*********************************************!*\
-  !*** ./src/dom/game-display/turnDisplay.js ***!
-  \*********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-const turnDisplay = (player, computer) => {
-  const container = document.querySelector(".turn-container");
-
-  while (container.hasChildNodes()) {
-    container.firstChild.remove();
-  }
-
-  const turnTitle = container.appendChild(document.createElement("h2"));
-  turnTitle.classList.add("turn-title");
-
-  const playerTurn = player.getTurnStatus();
-  const computerTurn = computer.getTurnStatus();
-
-  if (playerTurn === true) {
-    turnTitle.textContent = `It's  your turn ${player.getName()}, attack the computer's board!`;
-  } else if (computerTurn === true) {
-    turnTitle.textContent = `It's the computer's turn, brace for impact!`;
-  }
-};
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (turnDisplay);
-
-
-/***/ }),
-
-/***/ "./src/dom/game-display/updateGameDisplay.js":
-/*!***************************************************!*\
-  !*** ./src/dom/game-display/updateGameDisplay.js ***!
-  \***************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _turnDisplay__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./turnDisplay */ "./src/dom/game-display/turnDisplay.js");
-/* harmony import */ var _src_dom_helpers_displayFleetsAndShips_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../src/dom/helpers/displayFleetsAndShips.js */ "./src/dom/helpers/displayFleetsAndShips.js");
-
-
-
-const updateGameDisplay = (player, computer) => {
-  (0,_turnDisplay__WEBPACK_IMPORTED_MODULE_0__["default"])(player, computer);
-  (0,_src_dom_helpers_displayFleetsAndShips_js__WEBPACK_IMPORTED_MODULE_1__["default"])(player, computer);
-};
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (updateGameDisplay);
-
-
-/***/ }),
-
-/***/ "./src/dom/header.js":
-/*!***************************!*\
-  !*** ./src/dom/header.js ***!
-  \***************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 const createHeader = () => {
   const headerContainer = document.body.appendChild(
     document.createElement("nav")
@@ -734,138 +687,6 @@ const createHeader = () => {
   headerLogo.classList.add("header-logo-game");
   headerLogo.src = "/src/styles/images/Battleship-1.png";
 };
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (createHeader);
-
-
-/***/ }),
-
-/***/ "./src/dom/helpers/createListOfShips.js":
-/*!**********************************************!*\
-  !*** ./src/dom/helpers/createListOfShips.js ***!
-  \**********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-const createListOfShips = (container, player) => {
-  const listContainer = container.appendChild(document.createElement("div"));
-  listContainer.classList.add("list-container");
-  const shipListHeader = listContainer.appendChild(
-    document.createElement("h2")
-  );
-
-  const listOfShips = listContainer.appendChild(document.createElement("ul"));
-  listOfShips.classList.add("ships-list");
-
-  const playerName = player.getName();
-  const playerBoard = player.getPlayerBoard();
-  const fleetInfo = playerBoard.getShipStorage();
-
-  if (playerName === "AI") {
-    shipListHeader.textContent = "Computer's Fleet";
-    for (let i = 0; i < 5; i++) {
-      const shipDisplay = document.createElement("li");
-      listOfShips.appendChild(shipDisplay);
-      shipDisplay.classList.add("individual-ships");
-      shipDisplay.textContent = `${fleetInfo[i].shipType} (${fleetInfo[i].length})`;
-      shipDisplay.setAttribute("id", "ship" + [i + 1]);
-    }
-  } else {
-    shipListHeader.textContent = `${playerName}'s Fleet`;
-    for (let i = 0; i < 5; i++) {
-      const shipDisplay = document.createElement("li");
-      listOfShips.appendChild(shipDisplay);
-      shipDisplay.classList.add("individual-ships");
-      shipDisplay.textContent = `${fleetInfo[i].shipType} Health: ${fleetInfo[
-        i
-      ].getHealth()}/${fleetInfo[i].length}`;
-      shipDisplay.setAttribute("id", "ship" + [i + 1]);
-    }
-  }
-};
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (createListOfShips);
-
-
-/***/ }),
-
-/***/ "./src/dom/helpers/displayFleetsAndShips.js":
-/*!**************************************************!*\
-  !*** ./src/dom/helpers/displayFleetsAndShips.js ***!
-  \**************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _src_dom_helpers_createListOfShips_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../src/dom/helpers/createListOfShips.js */ "./src/dom/helpers/createListOfShips.js");
-
-
-const displayFleetsAndBoards = (player, computer) => {
-  const gameContainer = document.querySelector(".game-container");
-
-  while (gameContainer.hasChildNodes()) {
-    gameContainer.firstChild.remove();
-  }
-
-  const leftGame = gameContainer.appendChild(document.createElement("div"));
-  leftGame.classList.add("left-game");
-  const playerFleetDisplay = (0,_src_dom_helpers_createListOfShips_js__WEBPACK_IMPORTED_MODULE_0__["default"])(leftGame, player);
-  const playerBoard = player.getPlayerBoard();
-  playerBoard.renderBoard(leftGame, true);
-
-  const rightGame = gameContainer.appendChild(document.createElement("div"));
-  rightGame.classList.add("right-game");
-  const computerBoard = computer.getPlayerBoard();
-  computerBoard.renderBoard(rightGame);
-  const computerFleetDisplay = (0,_src_dom_helpers_createListOfShips_js__WEBPACK_IMPORTED_MODULE_0__["default"])(rightGame, computer);
-};
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (displayFleetsAndBoards);
-
-
-/***/ }),
-
-/***/ "./src/dom/helpers/pageTransition.js":
-/*!*******************************************!*\
-  !*** ./src/dom/helpers/pageTransition.js ***!
-  \*******************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "pageTranstion": () => (/* binding */ pageTranstion),
-/* harmony export */   "removeContent": () => (/* binding */ removeContent)
-/* harmony export */ });
-const pageTranstion = (content) => {
-  removeContent(content);
-};
-
-const removeContent = (content) => {
-  content.remove();
-};
-
-
-
-
-/***/ }),
-
-/***/ "./src/dom/home.js":
-/*!*************************!*\
-  !*** ./src/dom/home.js ***!
-  \*************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _components_helpers_handleForm__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/helpers/handleForm */ "./src/components/helpers/handleForm.js");
-
 
 const homeDisplay = () => {
   const createHome = document.body.appendChild(document.createElement("div"));
@@ -895,7 +716,7 @@ const homeDisplay = () => {
 
     const form = enterNameContainer.appendChild(document.createElement("form"));
     form.classList.add("form");
-    form.addEventListener("submit", _components_helpers_handleForm__WEBPACK_IMPORTED_MODULE_0__["default"]);
+    form.addEventListener("submit", _src_components_helpers_handleForm_js__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
     const input = form.appendChild(document.createElement("input"));
     input.classList.add("input");
@@ -909,32 +730,12 @@ const homeDisplay = () => {
     startBtn.textContent = "Start Game";
     startBtn.classList.add("start-btn");
     startBtn.setAttribute("type", "submit");
-    startBtn.addEventListener("submit", _components_helpers_handleForm__WEBPACK_IMPORTED_MODULE_0__["default"]);
+    startBtn.addEventListener("submit", _src_components_helpers_handleForm_js__WEBPACK_IMPORTED_MODULE_0__["default"]);
   })();
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (homeDisplay);
-
-
-/***/ }),
-
-/***/ "./src/dom/place-ships-display/placeShipDisplay.js":
-/*!*********************************************************!*\
-  !*** ./src/dom/place-ships-display/placeShipDisplay.js ***!
-  \*********************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _header__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../header */ "./src/dom/header.js");
-/* harmony import */ var _components_helpers_retrievePlayerName__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../components/helpers/retrievePlayerName */ "./src/components/helpers/retrievePlayerName.js");
-
-
-
-const placeShipDisplay = () => {
-  (0,_header__WEBPACK_IMPORTED_MODULE_0__["default"])();
+const positionShipDisplay = () => {
+  createHeader();
 
   const placeShip = document.body.appendChild(document.createElement("div"));
   placeShip.classList.add("place-ship-container");
@@ -944,7 +745,7 @@ const placeShipDisplay = () => {
   );
   headerContainer.classList.add("place-ship-header");
   const headerText = headerContainer.appendChild(document.createElement("h1"));
-  headerText.textContent = `${_components_helpers_retrievePlayerName__WEBPACK_IMPORTED_MODULE_1__.nameStorage} place your ships!`;
+  headerText.textContent = `${_src_components_helpers_retrievePlayerName_js__WEBPACK_IMPORTED_MODULE_2__.nameStorage} place your ships!`;
 
   const placeShipContent = placeShip.appendChild(
     document.createElement("main")
@@ -965,41 +766,213 @@ const placeShipDisplay = () => {
   startGameBtn.textContent = "I'm Ready";
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (placeShipDisplay);
+const gameDisplay = (player, computer) => {
+  const turnContainer = document.body.appendChild(
+    document.createElement("div")
+  );
+  turnContainer.classList.add("turn-container");
+  const gameContainer = document.body.appendChild(
+    document.createElement("div")
+  );
+  gameContainer.classList.add("game-container");
+
+  // Display who's turn it is
+  (0,_src_dom_domHelpers_js__WEBPACK_IMPORTED_MODULE_1__.turnDisplay)(player, computer);
+
+  // Renders Player and Computer's gameboard and fleet
+  (0,_src_dom_domHelpers_js__WEBPACK_IMPORTED_MODULE_1__.displayFleetsAndBoards)(player, computer);
+};
+
+
 
 
 /***/ }),
 
-/***/ "./src/gameFlow.js":
-/*!*************************!*\
-  !*** ./src/gameFlow.js ***!
-  \*************************/
+/***/ "./src/dom/domHelpers.js":
+/*!*******************************!*\
+  !*** ./src/dom/domHelpers.js ***!
+  \*******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */   "createListOfShips": () => (/* binding */ createListOfShips),
+/* harmony export */   "displayFleetsAndBoards": () => (/* binding */ displayFleetsAndBoards),
+/* harmony export */   "pageTranstion": () => (/* binding */ pageTranstion),
+/* harmony export */   "removeContent": () => (/* binding */ removeContent),
+/* harmony export */   "retrieveClicked": () => (/* binding */ retrieveClicked),
+/* harmony export */   "startGameListener": () => (/* binding */ startGameListener),
+/* harmony export */   "turnDisplay": () => (/* binding */ turnDisplay),
+/* harmony export */   "turnMsg": () => (/* binding */ turnMsg),
+/* harmony export */   "updateGameDisplay": () => (/* binding */ updateGameDisplay)
 /* harmony export */ });
-/* harmony import */ var _components_playRound__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./components/playRound */ "./src/components/playRound.js");
+/* harmony import */ var _components_gameFlow__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/gameFlow */ "./src/components/gameFlow.js");
+/* harmony import */ var _dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./dom */ "./src/dom/dom.js");
 
 
-const gameFlow = (player, computer) => {
+
+const startGameListener = (player, computer) => {
+  // assigning event listener to start game
+  const ListenerBtn = document.querySelector(".ready-btn");
+  const placeShipDisplay = document.querySelector(".place-ship-container");
+  const startGameBtn = document.querySelector(".ready-btn");
+
+  startGameBtn.addEventListener("click", function () {
+    // removes position display and repopulates with game display
+    removeContent(placeShipDisplay);
+    (0,_dom__WEBPACK_IMPORTED_MODULE_1__.gameDisplay)(player, computer);
+
+    // starts game flow
+    (0,_components_gameFlow__WEBPACK_IMPORTED_MODULE_0__["default"])(player, computer);
+  });
+};
+
+const createListOfShips = (container, player) => {
+  const listContainer = container.appendChild(document.createElement("div"));
+  listContainer.classList.add("list-container");
+  const shipListHeader = listContainer.appendChild(
+    document.createElement("h2")
+  );
+
+  const listOfShips = listContainer.appendChild(document.createElement("ul"));
+  listOfShips.classList.add("ships-list");
+
+  const playerName = player.getName();
   const playerBoard = player.getPlayerBoard();
-  const computerBoard = computer.getPlayerBoard();
+  const fleetInfo = playerBoard.getShipStorage();
 
-  console.log(playerBoard.areAllShipsSunk());
-  console.log(computerBoard.areAllShipsSunk());
-
-  // condition that makes playRound run until someone's fleet is completely sunk
-  while (
-    playerBoard.areAllShipsSunk() === false &&
-    computerBoard.areAllShipsSunk() === false
-  ) {
-    (0,_components_playRound__WEBPACK_IMPORTED_MODULE_0__["default"])(player, computer);
+  if (playerName === "AI") {
+    shipListHeader.textContent = "Computer's Fleet";
+    for (let i = 0; i < 5; i++) {
+      const shipDisplay = document.createElement("li");
+      listOfShips.appendChild(shipDisplay);
+      shipDisplay.classList.add("individual-ships");
+      shipDisplay.textContent = `${fleetInfo[i].shipType} (${fleetInfo[i].length})`;
+      shipDisplay.setAttribute("id", "ship" + [i + 6]);
+      if (fleetInfo[i].isSunk()) {
+        // let sunkShip = fleetInfo[i];
+        let sunkId = [i + 6];
+        const editShipDisplay = (() => {
+          let stringId = `ship${sunkId}`;
+          let editThisShip = document.getElementById(`ship${sunkId}`);
+          editThisShip.textContent = `${fleetInfo[i].shipType}'s sunk!`;
+          editThisShip.classList.toggle("sunk-ship-list");
+        })();
+      }
+    }
+  } else {
+    shipListHeader.textContent = `${playerName}'s Fleet`;
+    for (let i = 0; i < 5; i++) {
+      const shipDisplay = document.createElement("li");
+      listOfShips.appendChild(shipDisplay);
+      shipDisplay.classList.add("individual-ships");
+      shipDisplay.textContent = `${fleetInfo[i].shipType} Health: ${fleetInfo[
+        i
+      ].getHealth()}/${fleetInfo[i].length}`;
+      shipDisplay.setAttribute("id", "ship" + [i + 1]);
+    }
   }
 };
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (gameFlow);
+const sunkShipDisplay = (fleet) => {
+  if (fleet[i].isSunk()) {
+    // let sunkShip = fleet[i];
+    let sunkId = [i + 1];
+    const editShipDisplay = (() => {
+      let stringId = `ship${sunkId}`;
+      let editThisShip = document.getElementById(`ship${sunkId}`);
+      editThisShip.textContent = `${fleet[i].shipType} has been sunk!`;
+      console.log(stringId);
+    })();
+  }
+};
+
+const displayFleetsAndBoards = (player, computer) => {
+  const gameContainer = document.querySelector(".game-container");
+
+  while (gameContainer.hasChildNodes()) {
+    gameContainer.firstChild.remove();
+  }
+
+  const leftGame = gameContainer.appendChild(document.createElement("div"));
+  leftGame.classList.add("left-game");
+  const playerFleetDisplay = createListOfShips(leftGame, player);
+  const playerBoard = player.getPlayerBoard();
+  playerBoard.renderBoard(leftGame, true);
+
+  const rightGame = gameContainer.appendChild(document.createElement("div"));
+  rightGame.classList.add("right-game");
+  const computerBoard = computer.getPlayerBoard();
+  computerBoard.renderBoard(rightGame);
+  const computerFleetDisplay = createListOfShips(rightGame, computer);
+};
+
+const retrieveClicked = () => {
+  return new Promise((resolve) => {
+    let computerCells = document.querySelectorAll(".grid-box-computer");
+    computerCells.forEach((cell) =>
+      cell.addEventListener("click", function (e) {
+        resolve(e.target.dataset.info);
+      })
+    );
+  });
+};
+
+const displaySunkShips = (playerBoard, computerBoard) => {
+  const playerFleet = playerBoard.getFleetHealth();
+  const compFleet = computerBoard.getFleetHealth();
+
+  const playerBoardPieces = playerBoard.getBoardPieces();
+  const compBoardPieces = computerBoard.getBoardPieces();
+
+  playerFleet.map((ship) => {
+    if (ship === 0) {
+    }
+  });
+
+  const sunkPlayer = [];
+  const sunkComp = [];
+};
+
+const turnDisplay = (player, computer) => {
+  const container = document.querySelector(".turn-container");
+
+  while (container.hasChildNodes()) {
+    container.firstChild.remove();
+  }
+
+  const turnTitle = container.appendChild(document.createElement("h2"));
+  turnTitle.classList.add("turn-title");
+
+  const playerTurn = player.getTurnStatus();
+  const computerTurn = computer.getTurnStatus();
+
+  if (playerTurn === true) {
+    turnTitle.textContent = `It's  your turn ${player.getName()}, attack the computer's board!`;
+  } else if (computerTurn === true) {
+    turnTitle.textContent = `It's the computer's turn, brace for impact!`;
+  }
+};
+
+const turnMsg = (string) => {
+  const turnText = document.querySelector(".turn-title");
+  turnText.textContent = string;
+};
+
+const updateGameDisplay = (player, computer) => {
+  turnDisplay(player, computer);
+  displayFleetsAndBoards(player, computer);
+};
+
+const pageTranstion = (content) => {
+  removeContent(content);
+};
+
+const removeContent = (content) => {
+  content.remove();
+};
+
+
 
 
 /***/ })
@@ -1067,10 +1040,10 @@ var __webpack_exports__ = {};
   !*** ./src/index.js ***!
   \**********************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _src_dom_home_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../src/dom/home.js */ "./src/dom/home.js");
+/* harmony import */ var _dom_dom__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./dom/dom */ "./src/dom/dom.js");
 
 
-(0,_src_dom_home_js__WEBPACK_IMPORTED_MODULE_0__["default"])();
+(0,_dom_dom__WEBPACK_IMPORTED_MODULE_0__.homeDisplay)();
 
 })();
 
