@@ -70,6 +70,7 @@ const positionShipDisplay = () => {
     document.createElement("header")
   );
   headerContainer.classList.add("place-ship-header");
+
   const headerText = headerContainer.appendChild(document.createElement("h1"));
   headerText.textContent = `${nameStorage} place your ships!`;
 
@@ -90,6 +91,23 @@ const positionShipDisplay = () => {
 
   startGameBtn.classList.add("ready-btn");
   startGameBtn.textContent = "I'm Ready";
+
+  // const dragShipsContainer = placeShipContent.appendChild(
+  //   document.createElement("div")
+  // );
+  // dragShipsContainer.classList.add("drag-ship-container");
+
+  // const ships = ["carrier", "battleship", "cruiser", "submarine", "destroyer"];
+  // const shipLength = [5, 4, 3, 3, 2];
+
+  // for (let i = 0; i < ships.length; i++) {
+  //   const dragShip = document.createElement("div");
+  //   dragShipsContainer.appendChild(dragShip);
+  //   dragShip.classList.add(`${ships[i]}`);
+  //   for (let j = 0; j < shipLength.length; j++) {
+  //     dragShip.appendChild(document.createElement("div"));
+  //   }
+  // }
 };
 
 const gameDisplay = (player, computer) => {

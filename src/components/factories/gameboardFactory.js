@@ -45,8 +45,10 @@ function Gameboard() {
     listOfShips.map((ship) => {
       cssShips.map((cssShip) => {
         positionShipContainer.addEventListener("mouseover", function (e) {
-          document.createElement("div").classList.add(cssShip);
           console.log(e.target.dataset.info);
+          if (ship.shipType === cssShip) {
+          }
+          document.createElement("div").classList.add(cssShip);
         });
       });
     });
@@ -158,6 +160,7 @@ function Gameboard() {
 
       for (let i = 0; i < 100; i++) {
         let cell = grid.appendChild(document.createElement("div"));
+        cell.setAttribute("id", `${boardPieces[i].ID}`);
         cell.classList.add("grid-box");
         cell.dataset.info = JSON.stringify(boardPieces[i]);
         let cellData = boardPieces[i];

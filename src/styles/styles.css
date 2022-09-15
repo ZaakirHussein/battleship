@@ -146,6 +146,7 @@ input:focus::-webkit-input-placeholder {
   grid-template-columns: 1fr repeat(2, auto) 1fr;
   justify-items: center;
   width: 100%;
+  align-items: center;
 }
 
 .grid-container {
@@ -163,10 +164,11 @@ input:focus::-webkit-input-placeholder {
 }
 
 .list-container {
+  grid-row-start: 1;
   border: 1px solid white;
-  padding: 3rem;
+  padding: 2rem;
   border-radius: 2%;
-  height: fit-content;
+  height: 80%;
   width: fit-content;
   background-color: #060b0d;
 }
@@ -190,42 +192,17 @@ input:focus::-webkit-input-placeholder {
 
 .ships-list li {
   font-size: 2rem;
-  margin-bottom: 10px;
-  margin-right: 5px;
+  margin: 2rem 0.5rem 2rem 0rem;
 }
 
 .ready-btn {
-  height: fit-content;
-  grid-row-start: 1;
-  grid-column-start: 1;
-  align-self: top;
-  background-color: #fff;
-  background-image: none;
-  background-position: 0 90%;
-  background-repeat: repeat no-repeat;
-  background-size: 4px 3px;
-  border-radius: 15px 225px 255px 15px 15px 255px 225px 15px;
-  border-style: solid;
-  border-width: 2px;
-  box-shadow: rgba(0, 0, 0, 0.2) 15px 28px 25px -18px;
-  box-sizing: border-box;
-  color: #41403e;
-  cursor: pointer;
-  display: inline-block;
-  font-family: Neucha, sans-serif;
-  font-size: 2rem;
-  line-height: 23px;
-  outline: none;
-  padding: 0.75rem;
+  background-color: #4caf50;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
   text-decoration: none;
-  transition: all 235ms ease-in-out;
-  border-bottom-left-radius: 15px 255px;
-  border-bottom-right-radius: 225px 15px;
-  border-top-left-radius: 255px 15px;
-  border-top-right-radius: 15px 225px;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: manipulation;
+  font-size: 2rem;
 }
 
 .ready-btn:hover {
@@ -237,38 +214,48 @@ input:focus::-webkit-input-placeholder {
   box-shadow: rgba(0, 0, 0, 0.3) 2px 8px 4px -6px;
 }
 
+.drag-ship-container {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+}
+
 .carrier {
   display: grid;
-  width: 45rem;
-  height: 45rem;
+  width: 2rem;
+  height: 2rem;
   grid-template-columns: repeat(5, 1fr);
+  background-color: #187306;
 }
 
 .battleship {
   display: grid;
-  width: 45rem;
-  height: 45rem;
+  width: 2rem;
+  height: 2rem;
   grid-template-columns: repeat(4, 1fr);
+  background-color: #187306;
 }
 
 .cruiser {
   display: grid;
-  width: 45rem;
-  height: 45rem;
-  grid-template-columns: repeat(3, 1fr);
+  width: 2rem;
+  height: 2rem;
+  grid-template-columns: 20px 20px 20px;
+  background-color: #187306;
 }
 
 .submarine {
   display: grid;
-  width: 45rem;
-  height: 45rem;
+  width: 2rem;
+  height: 2rem;
   grid-template-columns: repeat(3, 1fr);
+  background-color: #187306;
 }
 
 .destroyer {
   display: grid;
-  width: 45rem;
-  height: 45rem;
+  width: 2rem;
+  height: 2rem;
   grid-template-columns: repeat(2, 1fr);
 }
 /* Game Display */
