@@ -48,3 +48,14 @@ test("get ship coordinates", () => {
     "A5",
   ]);
 });
+
+test("change ship orientation", () => {
+  let carrier = new Ship("Carrier", 5, ["A1", "A2", "A3", "A4", "A5"]);
+  carrier.changeOrientation();
+  expect(carrier.getOrientation()).toBe("vertical");
+
+  let destroyer = new Ship("Destroyer", 2, ["A3", "A4"]);
+  destroyer.changeOrientation();
+  destroyer.changeOrientation();
+  expect(destroyer.getOrientation()).toBe("horizontal");
+});

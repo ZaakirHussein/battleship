@@ -1,7 +1,6 @@
-import handleForm from "/src/components/helpers/handleForm.js";
-import { displayFleetsAndBoards, turnDisplay } from "/src/dom/domHelpers.js";
-import { nameStorage } from "/src/components/helpers/retrievePlayerName.js";
-import { retrievePlayerName } from "../components/helpers/retrievePlayerName";
+import { displayFleetsAndBoards, turnDisplay } from "./domHelpers";
+import handleForm from "../components/helpers/handleForm";
+import { nameStorage } from "../components/helpers/retrievePlayerName";
 
 const createHeader = () => {
   const headerContainer = document.body.appendChild(
@@ -85,29 +84,18 @@ const positionShipDisplay = () => {
 
   gridContainer.classList.add("grid-container");
 
-  const startGameBtn = placeShipContent.appendChild(
+  const btnContainer = placeShipContent.appendChild(
+    document.createElement("div")
+  );
+
+  btnContainer.classList.add("btn-container");
+
+  const autoPlacement = btnContainer.appendChild(
     document.createElement("button")
   );
 
-  startGameBtn.classList.add("ready-btn");
-  startGameBtn.textContent = "I'm Ready";
-
-  // const dragShipsContainer = placeShipContent.appendChild(
-  //   document.createElement("div")
-  // );
-  // dragShipsContainer.classList.add("drag-ship-container");
-
-  // const ships = ["carrier", "battleship", "cruiser", "submarine", "destroyer"];
-  // const shipLength = [5, 4, 3, 3, 2];
-
-  // for (let i = 0; i < ships.length; i++) {
-  //   const dragShip = document.createElement("div");
-  //   dragShipsContainer.appendChild(dragShip);
-  //   dragShip.classList.add(`${ships[i]}`);
-  //   for (let j = 0; j < shipLength.length; j++) {
-  //     dragShip.appendChild(document.createElement("div"));
-  //   }
-  // }
+  autoPlacement.classList.add("auto-place");
+  autoPlacement.textContent = "Auto Placement";
 };
 
 const gameDisplay = (player, computer) => {

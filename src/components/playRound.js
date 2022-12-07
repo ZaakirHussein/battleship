@@ -1,31 +1,37 @@
-import { updateGameDisplay } from "../dom/domHelpers";
+import { updateGameDisplay, retrieveClickedBox } from "../dom/domHelpers";
 
-const playRound = (player, computer) => {
-  const playerBoard = player.getPlayerBoard();
-  const computerBoard = computer.getPlayerBoard();
-  const computerBoardDom = computerBoard.getCompCells();
+const changeTurn = (player1, player2) => {
+  player1.changeTurn();
+  player2.changeTurn();
+  console.log(`${player1.getName()}: ${player1.getTurnStatus()}`);
+  console.log(`${player2.getName()}: ${player2.getTurnStatus()}`);
+};
 
-  if (player.getTurnStatus()) {
-    for (const cell of computerBoardDom) {
-      cell.addEventListener("click", function () {
-        let coordinates = cell.dataset.info;
-        computerBoard.receiveAttack(coordinates, player);
-        player.changeTurn();
-        computer.changeTurn();
-        updateGameDisplay(player, computer);
-        computerBoard.areAllShipsSunk();
-        playerBoard.areAllShipsSunk();
-      });
-    }
-  }
+const sunkShipBoardListener = (player1Board, player2Board) => {
+  player1Board.setShipSunkBoardProp();
+  player2Board.setShipSunkBoardProp();
+};
+
+const playRound = (player, playerBoard, computer, computerBoard) => {
+  const userTurn = (async () => {
+    const coordinates = await retrieveClickedBox();
+    computerBoard.receiveAttack(coordinates, player);
+    changeTurn(player, computer);
+    sunkShipBoardListener(playerBoard, computerBoard);
+    updateGameDisplay(player, computer);
+    return playerBoard.areAllShipsSunk();
+  })();
 
   if (computer.getTurnStatus()) {
-    computer.computerPlay(player, computer);
-    computer.changeTurn();
-    player.changeTurn();
-    updateGameDisplay(player, computer);
-    computerBoard.areAllShipsSunk();
-    playerBoard.areAllShipsSunk();
+    const computerTurn = (() => {
+      setTimeout(() => {
+        computerPlay(player, computer);
+        changeTurn(computer, player);
+        sunkShipBoardListener(computerBoard, playerBoard);
+        updateGameDisplay(player, computer);
+        return computerBoard.areAllShipsSunk();
+      }, 3000);
+    })();
   }
 };
 

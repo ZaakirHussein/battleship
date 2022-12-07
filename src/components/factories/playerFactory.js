@@ -36,21 +36,6 @@ function PlayerFactory(name, checkTurn) {
     return moves;
   };
 
-  const randomShipPlacement = (player) => {
-    const playerBoardObj = player.board;
-    const playerBoardAccess = playerBoardObj.getBoardPieces();
-
-    const fiveCoordinates = [];
-
-    for (let i = 0; i < 5; i++) {
-      const randomBoardPiece =
-        playerBoardAccess[Math.floor(Math.random() * playerBoardAccess.length)];
-      fiveCoordinates.push(randomBoardPiece.ID);
-    }
-
-    return fiveCoordinates;
-  };
-
   return {
     turn,
     moves,
@@ -62,7 +47,6 @@ function PlayerFactory(name, checkTurn) {
     getPlayerBoard,
     getAttackCoord,
     getMoves,
-    randomShipPlacement,
   };
 }
 

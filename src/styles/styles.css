@@ -12,6 +12,7 @@ html {
 
 body {
   height: 100%;
+  background-color: black;
 }
 
 /* Home Display */
@@ -93,7 +94,8 @@ input:focus::-webkit-input-placeholder {
   transform: scale(1);
 }
 
-.start-btn {
+.start-btn,
+.ready-btn {
   font-size: 1.6rem;
   letter-spacing: 0.2rem;
   text-decoration: none;
@@ -109,16 +111,24 @@ input:focus::-webkit-input-placeholder {
   -webkit-user-select: none;
   touch-action: manipulation;
   height: fit-content;
+  animation: FadeIn 2s;
+  -moz-animation: FadeIn 2s;
+  /* Firefox */
+  -webkit-animation: FadeIn 2s;
+  /* Safari and Chrome */
+  -o-animation: FadeIn 2s;
 }
 
-.start-btn:active {
+.start-btn:active,
+.ready-btn:active {
   box-shadow: 0px 0px 0px 0px;
   top: 5px;
   left: 5px;
 }
 
 @media (min-width: 768px) {
-  .start-btn {
+  .start-btn,
+  .ready-btn {
     padding: 0.25em 0.75em;
   }
 }
@@ -126,8 +136,10 @@ input:focus::-webkit-input-placeholder {
 /* Place Ship DIsplay */
 
 .place-ship-container {
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
   background-color: #080a0d;
-  height: 85vh;
 }
 
 .place-ship-header {
@@ -165,12 +177,19 @@ input:focus::-webkit-input-placeholder {
 
 .list-container {
   grid-row-start: 1;
+  display: flex;
+  flex-direction: column;
   border: 1px solid white;
   padding: 2rem;
   border-radius: 2%;
-  height: 80%;
-  width: fit-content;
+  height: fit-content;
+  width: 270px;
   background-color: #060b0d;
+  animation: fadeOut 5s;
+  -webkit-animation: fadeOut 5s;
+  -moz-animation: fadeOut 5s;
+  -o-animation: fadeOut 5s;
+  -ms-animation: fadeOut 5s;
 }
 
 .list-container h2 {
@@ -195,23 +214,133 @@ input:focus::-webkit-input-placeholder {
   margin: 2rem 0.5rem 2rem 0rem;
 }
 
-.ready-btn {
+.ship-list-item {
+  display: flex;
+}
+
+.btn-container {
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
+}
+
+.auto-place {
+  font-size: 1.6rem;
+  letter-spacing: 0.2rem;
+  text-decoration: none;
+  text-transform: uppercase;
+  color: #000;
+  cursor: pointer;
+  border: 0.3rem solid #4caf50;
+  padding: 0.25em 0.5em;
+
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  height: fit-content;
   background-color: #4caf50;
-  border: none;
+  /* border: none;
   color: white;
   padding: 15px 32px;
   text-align: center;
   text-decoration: none;
-  font-size: 2rem;
+  font-size: 2rem; */
 }
 
-.ready-btn:hover {
+.auto-place:hover {
   box-shadow: rgba(0, 0, 0, 0.3) 2px 8px 8px -5px;
   transform: translate3d(0, 2px, 0);
 }
 
-.ready-btn:focus {
+.auto-place:focus {
   box-shadow: rgba(0, 0, 0, 0.3) 2px 8px 4px -6px;
+}
+
+@keyframes FadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-moz-keyframes FadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes FadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-o-keyframes FadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-ms-keyframes FadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes FadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-webkit-keyframes FadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-moz-keyframes FadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-o-keyframes FadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-ms-keyframes FadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .drag-ship-container {
@@ -220,44 +349,102 @@ input:focus::-webkit-input-placeholder {
   flex-direction: column;
 }
 
-.carrier {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  grid-template-columns: repeat(5, 1fr);
-  background-color: #187306;
+.Battleship {
+  background-color: violet;
+}
+.Cruiser {
+  background-color: #ff5f15;
+}
+.Submarine {
+  background-color: lime;
+}
+.Destroyer {
+  background-color: aqua;
 }
 
-.battleship {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  grid-template-columns: repeat(4, 1fr);
-  background-color: #187306;
+.ship-img {
+  max-height: 38px;
 }
 
-.cruiser {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  grid-template-columns: 20px 20px 20px;
-  background-color: #187306;
+#carrier {
+  width: 215.5px;
 }
 
-.submarine {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  grid-template-columns: repeat(3, 1fr);
-  background-color: #187306;
+#battleship {
+  width: 172.4px;
 }
 
-.destroyer {
-  display: grid;
-  width: 2rem;
-  height: 2rem;
-  grid-template-columns: repeat(2, 1fr);
+#submarine,
+#cruiser {
+  width: 130px;
 }
+
+#destroyer {
+  width: 86.2px;
+}
+
+#carrier:hover,
+#battleship:hover,
+#submarine:hover,
+#cruiser:hover,
+#destroyer:hover {
+  cursor: grab;
+}
+
+.grid-box.over {
+  border: 3px dotted #666;
+  background: green;
+}
+
+.grid-box.invalid {
+  border: 3px dotted #666;
+  background: red;
+}
+
+.shake {
+  /* Start the shake animation and make the animation last for 0.5 seconds */
+  animation: shake 0.5s;
+
+  /* When the animation is finished, start again */
+  animation-iteration-count: 3;
+}
+
+@keyframes shake {
+  0% {
+    transform: translate(1px, 1px) rotate(0deg);
+  }
+  10% {
+    transform: translate(-1px, -2px) rotate(-1deg);
+  }
+  20% {
+    transform: translate(-3px, 0px) rotate(1deg);
+  }
+  30% {
+    transform: translate(3px, 2px) rotate(0deg);
+  }
+  40% {
+    transform: translate(1px, -1px) rotate(1deg);
+  }
+  50% {
+    transform: translate(-1px, 2px) rotate(-1deg);
+  }
+  60% {
+    transform: translate(-3px, 1px) rotate(0deg);
+  }
+  70% {
+    transform: translate(3px, 1px) rotate(-1deg);
+  }
+  80% {
+    transform: translate(-1px, -1px) rotate(1deg);
+  }
+  90% {
+    transform: translate(1px, 2px) rotate(0deg);
+  }
+  100% {
+    transform: translate(1px, -2px) rotate(-1deg);
+  }
+}
+
 /* Game Display */
 
 .header-container-game {
@@ -318,8 +505,12 @@ input:focus::-webkit-input-placeholder {
   border: 1px solid #24c715;
 }
 
-.box-ship-placed {
-  background-color: #187306;
+.Carrier,
+.Battleship,
+.Cruiser,
+.Submarine,
+.Destroyer {
+  background-color: green;
 }
 
 .box-hit {

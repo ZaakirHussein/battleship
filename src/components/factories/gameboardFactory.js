@@ -21,7 +21,7 @@ function Gameboard() {
     return board;
   };
 
-  const boardPieces = createBoard();
+  let boardPieces = createBoard();
 
   const shipStorage = [
     new Ship("Carrier", 5),
@@ -31,32 +31,10 @@ function Gameboard() {
     new Ship("Destroyer", 2),
   ];
 
-  const positionUserShips = () => {
-    const listOfShips = getShipStorage();
-    const cssShips = [
-      "carrier",
-      "battleship",
-      "cruiser",
-      "submarine",
-      "destroyer",
-    ];
-    const positionShipContainer = document.querySelector(".grid-container");
-
-    listOfShips.map((ship) => {
-      cssShips.map((cssShip) => {
-        positionShipContainer.addEventListener("mouseover", function (e) {
-          console.log(e.target.dataset.info);
-          if (ship.shipType === cssShip) {
-          }
-          document.createElement("div").classList.add(cssShip);
-        });
-      });
-    });
-  };
-
   const setShipCoordinates = (name, inputCoordinates) => {
+    console.log(`Ship: ${name} Coordinates:${inputCoordinates}`);
     for (const ship of shipStorage) {
-      if (ship.shipType === name) {
+      if (ship.getShipType() === name) {
         ship.coordinates = inputCoordinates;
       }
     }
@@ -79,16 +57,20 @@ function Gameboard() {
     );
 
     // Sets the active ship's coordindate property to the inputed coordinates
-    const activeShip = shipStorage.find((ship) => ship.shipType === name);
+    const activeShip = shipStorage.find((ship) => ship.getShipType() === name);
 
     for (const boardPiece of approvedBoardPieces) {
       boardPiece.ship = activeShip;
     }
   };
 
+  const areShipsPlaced = () => {
+    return shipStorage.every((ship) => ship.placed === true);
+  };
+
   const hitActiveShip = (shipName, inputtedCoordinates) => {
     for (const shipObj of shipStorage) {
-      if (shipObj.shipType === shipName) {
+      if (shipObj.getShipType() === shipName) {
         shipObj.hit(inputtedCoordinates);
       }
     }
@@ -123,6 +105,9 @@ function Gameboard() {
   };
 
   const setShipSunkBoardProp = () => {
+    // this function iterates through the a player's ships and updates the grid boardpieces sunk property
+    // this is used to change the colour of a sunk ship
+
     const sunkShips = [];
 
     for (const ship of shipStorage) {
@@ -142,11 +127,171 @@ function Gameboard() {
           );
 
           for (const boardPiece of approvedBoardPieces) {
+            // if the coordinate belongs to a sunk ship, we set the boardpiece's sunk property to
             boardPiece.sunk = sunkShip.getSunkStatus();
           }
         });
       }
     }
+  };
+
+  const checkCoordinatesAvailability = (arr, data, userType) => {
+    const checkTheseGridBoxes = arr.map((indivdiualCoordinate) => {
+      const matchingBoardPieces = boardPieces.find((boardPiece) => {
+        return boardPiece.ID === indivdiualCoordinate;
+      });
+
+      return matchingBoardPieces;
+    });
+
+    const areCoordinatesAvailable = () => {
+      return checkTheseGridBoxes.every((gridBox) => gridBox.ship === null);
+    };
+
+    const testCondition = areCoordinatesAvailable();
+
+    if (userType === "human" && !testCondition) {
+      console.log("the coordinates submitted NOT are available");
+      const shipImg = document.getElementById(data);
+      shipImg.classList.add("shake");
+      shipImg.addEventListener("animationend", () => {
+        shipImg.classList.remove("shake");
+      });
+    }
+
+    return testCondition;
+  };
+
+  const randomShipPlacement = () => {
+    shipStorage.forEach((ship) => {
+      while (ship.coordinates.length < ship.length) {
+        let coordinatesArr = [];
+
+        const random = Math.floor(Math.random() * boardPieces.length);
+
+        const shipLength = ship.length - 1;
+        const shipStartObj = boardPieces[random];
+        const shipStart = shipStartObj.ID;
+
+        const shipStartLetterCoord = shipStart.charAt(0);
+        let shipStartnNumberCoord;
+
+        if (shipStart.length < 3) {
+          shipStartnNumberCoord = parseInt(shipStart.charAt(1));
+        } else {
+          shipStartnNumberCoord = parseInt(shipStart.substring(1, 3));
+        }
+
+        const verticalOrHorizonal = (() => {
+          let num = Math.random();
+          if (num < 0.5) {
+            return "horizontal";
+          } else {
+            return "vertical";
+          }
+        })();
+
+        if (verticalOrHorizonal === "vertical") {
+          ship.orientation = "vertical";
+          console.log(ship.orientation);
+
+          const verticalShipPlacement = (() => {
+            const boardLetters = [
+              "A",
+              "B",
+              "C",
+              "D",
+              "E",
+              "F",
+              "G",
+              "H",
+              "I",
+              "J",
+              "K",
+            ];
+
+            const returnIndex = boardLetters.indexOf(shipStartLetterCoord);
+            const shipEndLetter = boardLetters[returnIndex + shipLength];
+            const shipEndLetterIndex = boardLetters.indexOf(shipEndLetter);
+
+            // if the last last coorindates letter coordinate index is lessan than 10
+
+            if (shipEndLetterIndex > 0 && shipEndLetterIndex < 10) {
+              const dropCoordinates = (() => {
+                for (let i = returnIndex; i <= shipEndLetterIndex; i++) {
+                  let coordinate = `${boardLetters[i]}${shipStartnNumberCoord}`;
+                  coordinatesArr.push(coordinate);
+                }
+              })();
+
+              const areCoordinatesAvailable = checkCoordinatesAvailability(
+                coordinatesArr,
+                shipStart
+              );
+
+              if (areCoordinatesAvailable) {
+                const shipNm = ship.getShipType();
+                setShipCoordinates(shipNm, coordinatesArr);
+              } else if (!areCoordinatesAvailable) {
+                console.log("coordinates were NOT Available");
+                return (coordinatesArr = []);
+              }
+            }
+          })();
+        }
+
+        if (verticalOrHorizonal === "horizontal") {
+          ship.orientation = "horizontal";
+          console.log(ship.orientation);
+
+          const horizontalShipPlacement = (() => {
+            const shipEndNum = shipStartnNumberCoord + shipLength;
+
+            if (shipStart.length === 2 && shipEndNum <= 10) {
+              const dropCoordinates = (() => {
+                for (let i = shipStartnNumberCoord; i <= shipEndNum; i++) {
+                  let coordinate = `${shipStartLetterCoord}${i}`;
+                  coordinatesArr.push(coordinate);
+                }
+              })();
+
+              const checkTheseGridBoxes = coordinatesArr.map(
+                (indivdiualCoordinate) => {
+                  const matchingBoardPieces = boardPieces.find((boardPiece) => {
+                    return boardPiece.ID === indivdiualCoordinate;
+                  });
+
+                  return matchingBoardPieces;
+                }
+              );
+
+              const areCoordinatesAvailable = (() => {
+                return checkTheseGridBoxes.every(
+                  (gridBox) => gridBox.ship === null
+                );
+              })();
+
+              if (areCoordinatesAvailable) {
+                const shipNm = ship.getShipType();
+                setShipCoordinates(shipNm, coordinatesArr);
+              } else if (!areCoordinatesAvailable) {
+                console.log("coordinates were NOT Available");
+                return (coordinatesArr = []);
+              }
+            }
+          })();
+        }
+
+        console.log(
+          `${ship.getShipType()}, coordinates.length: ${
+            ship.coordinates.length
+          }`
+        );
+        console.log(ship.length);
+      }
+    });
+
+    console.log(shipStorage);
   };
 
   const renderBoard = (container, user, mode) => {
@@ -169,7 +314,7 @@ function Gameboard() {
         let cellSunkStatus = cellData.sunk;
 
         if (cellShipData !== null) {
-          cell.classList.toggle("box-ship-placed");
+          cell.classList.toggle(`${cellShipData.getShipType()}`);
         }
 
         if (cellSunkStatus === true) {
@@ -199,9 +344,9 @@ function Gameboard() {
         compCell.dataset.info = boardPieces[i].ID;
         const compCellData = boardPieces[i];
         const cellStatus = compCellData.status;
-        let cellSunkStatus = compCellData.sunk;
+        compCell.dataset.clicked = cellStatus;
 
-        console.log(cellSunkStatus);
+        let cellSunkStatus = compCellData.sunk;
 
         if (cellSunkStatus == true) {
           compCell.classList.toggle("box-sunk");
@@ -252,8 +397,20 @@ function Gameboard() {
 
   const areAllShipsSunk = () => {
     const ships = getShipStorage();
-    let result = ships.map((ship) => ship.isSunk());
+    const result = ships.map((ship) => ship.isSunk());
     return result.every((element) => element === true);
+  };
+
+  const resetShips = () => {
+    shipStorage.forEach((ship) => {
+      ship.placed = false;
+      ship.orientation = "horizontal";
+      ship.coordinates = [];
+    });
+  };
+
+  const resetBoard = () => {
+    boardPieces = createBoard();
   };
 
   return {
@@ -264,9 +421,14 @@ function Gameboard() {
     getShipStorage,
     getFleetHealth,
     areAllShipsSunk,
-    positionUserShips,
+    areShipsPlaced,
+    checkCoordinatesAvailability,
+    resetShips,
+    resetBoard,
+    randomShipPlacement,
     receiveAttack,
     renderBoard,
+    createBoard,
   };
 }
 

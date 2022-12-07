@@ -1,4 +1,4 @@
-import { removeContent } from "/src/dom/domHelpers.js";
+import { removeContent } from "../../dom/domHelpers";
 import { retrievePlayerName } from "./retrievePlayerName";
 import initializeGame from "../initializeGame";
 

@@ -3,9 +3,8 @@ function Ship(name, length, coordinates = []) {
   let health = length;
   const hitMarkers = [];
   let sunk = false;
-
-  //setCoordinates
-  const shipCoordinates = coordinates;
+  let placed = false;
+  let orientation = "horizontal";
 
   const hit = () => {
     if (health >= 1) {
@@ -18,7 +17,15 @@ function Ship(name, length, coordinates = []) {
     if (health === 0) {
       sunk = true;
       return true;
-    } else return false;
+    }
+    return false;
+  };
+
+  const changeOrientation = () => {
+    if (orientation === "horizontal") {
+      return (orientation = "vertical");
+    }
+    return (orientation = "horizontal");
   };
 
   const getShipCoordinates = () => {
@@ -36,18 +43,34 @@ function Ship(name, length, coordinates = []) {
     return sunk;
   };
 
+  const getShipType = () => {
+    return shipType;
+  };
+
+  const getIsShipPlaced = () => {
+    return placed;
+  };
+
+  const getOrientation = () => {
+    return orientation;
+  };
   return {
     shipType,
     length,
     coordinates,
     sunk,
-    health,
+    orientation,
+    placed,
     hit,
     isSunk,
+    changeOrientation,
     getShipCoordinates,
     getHealth,
     getHitmarkers,
     getSunkStatus,
+    getShipType,
+    getIsShipPlaced,
+    getOrientation,
   };
 }
 
